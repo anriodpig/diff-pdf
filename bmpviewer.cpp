@@ -153,8 +153,7 @@ void BitmapViewer::OnMouseDown(wxMouseEvent& event)
     wxPoint view_origin;
     GetViewStart(&view_origin.x, &view_origin.y);
 
-    // Use absolute position instead
-    const wxPoint pos = CalcUnscrolledPosition(event.GetPosition());
+    const wxPoint pos = event.GetPosition();
 
     m_draggingPage = true;
     m_draggingLastMousePos = pos;
@@ -179,9 +178,7 @@ void BitmapViewer::OnMouseMove(wxMouseEvent& event)
     wxPoint view_origin;
     GetViewStart(&view_origin.x, &view_origin.y);
 
-    // Use absolute position instead
-    const wxPoint pos = CalcUnscrolledPosition(event.GetPosition());
-    
+    const wxPoint pos = event.GetPosition();
     wxPoint new_pos = view_origin + (m_draggingLastMousePos - pos);
 
     Scroll(new_pos.x, new_pos.y);

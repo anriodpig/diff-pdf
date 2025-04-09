@@ -20,6 +20,7 @@
 #include "bmpviewer.h"
 #include "gutter.h"
 
+#include <wx/wx.h>
 #include <wx/sizer.h>
 
 BEGIN_EVENT_TABLE(BitmapViewer, wxScrolledWindow)
@@ -37,6 +38,8 @@ BitmapViewer::BitmapViewer(wxWindow *parent)
                        wxDefaultPosition, wxDefaultSize,
                        wxFULL_REPAINT_ON_RESIZE)
 {
+    wxLog *oldLog = wxLog::SetActiveTarget(new wxLogWindow(NULL, "Log Window", true));
+
     m_gutter = NULL;
     m_zoom_factor = 1.0;
 

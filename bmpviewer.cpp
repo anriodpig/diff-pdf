@@ -100,7 +100,7 @@ void BitmapViewer::UpdateBitmap()
     }
 
     GetSizer()->FitInside(this);
-    wxLogMessage("UpdateBitmap: calling Scroll(%d, %d) to restore view", view_x, view_y);
+    // wxLogMessage("UpdateBitmap: calling Scroll(%d, %d) to restore view", view_x, view_y);
 
     // »Ö¸´¹ö¶¯Î»ÖÃ
     Scroll(view_x, view_y);

@@ -140,11 +140,10 @@ void BitmapViewer::AttachGutter(Gutter *g)
 
 void BitmapViewer::OnMouseDown(wxMouseEvent &event)
 {
-    wxPoint view_origin;
-    GetViewStart(&view_origin.x, &view_origin.y);
-
     // Use absolute position instead
-    const wxPoint pos = CalcUnscrolledPosition(event.GetPosition());
+    wxPoint pos = CalcUnscrolledPosition(event.GetPosition());
+    pos.x = static_cast<int>(pos.x / m_zoom_factor);
+    pos.y = static_cast<int>(pos.y / m_zoom_factor);
 
     m_draggingPage = true;
     m_draggingLastMousePos = pos;
@@ -157,14 +156,13 @@ void BitmapViewer::OnMouseUp(wxMouseEvent &)
     ReleaseMouse();
 }
 
-void BitmapViewer::OnMouseMove(wxMouseEvent &event)
+void BitmapViewer::OnMouseMove(wxMouseEvent& event)
 {
     event.Skip();
 
     if (!m_draggingPage)
         return;
 
-    // Get scroll lenth
     int xppu, yppu;
     GetScrollPixelsPerUnit(&xppu, &yppu);
 
@@ -173,11 +171,13 @@ void BitmapViewer::OnMouseMove(wxMouseEvent &event)
     view_origin.x *= xppu;
     view_origin.y *= yppu;
 
-    // Use absolute position instead
-    const wxPoint pos = CalcUnscrolledPosition(event.GetPosition());
+    // 获取当前鼠标的逻辑坐标（非缩放后），并考虑缩放因子
+    wxPoint pos = CalcUnscrolledPosition(event.GetPosition());
+    pos.x = static_cast<int>(pos.x / m_zoom_factor);
+    pos.y = static_cast<int>(pos.y / m_zoom_factor);
+
     wxPoint delta = m_draggingLastMousePos - pos;
 
-    // Control via step lenth
     wxPoint new_pos = view_origin + delta;
     Scroll(new_pos.x / xppu, new_pos.y / yppu);
 

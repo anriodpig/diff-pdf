@@ -23,12 +23,12 @@
 #include <wx/sizer.h>
 
 BEGIN_EVENT_TABLE(BitmapViewer, wxScrolledWindow)
-    EVT_LEFT_DOWN(BitmapViewer::OnMouseDown)
-    EVT_LEFT_UP(BitmapViewer::OnMouseUp)
-    EVT_MOTION(BitmapViewer::OnMouseMove)
-    EVT_MOUSE_CAPTURE_LOST(BitmapViewer::OnMouseCaptureLost)
-    EVT_SCROLLWIN(BitmapViewer::OnScrolling)
-    EVT_SIZE(BitmapViewer::OnSizeChanged)
+EVT_LEFT_DOWN(BitmapViewer::OnMouseDown)
+EVT_LEFT_UP(BitmapViewer::OnMouseUp)
+EVT_MOTION(BitmapViewer::OnMouseMove)
+EVT_MOUSE_CAPTURE_LOST(BitmapViewer::OnMouseCaptureLost)
+EVT_SCROLLWIN(BitmapViewer::OnScrolling)
+EVT_SIZE(BitmapViewer::OnSizeChanged)
 END_EVENT_TABLE()
 
 BitmapViewer::BitmapViewer(wxWindow *parent)
@@ -51,15 +51,12 @@ BitmapViewer::BitmapViewer(wxWindow *parent)
 
     // we need to bind mouse-down event to m_content, as this scrolled window
     // will never see mouse events otherwise
-    m_content->Connect
-               (
-                   wxEVT_LEFT_DOWN,
-                   wxMouseEventHandler(BitmapViewer::OnMouseDown),
-                   NULL,
-                   this
-               );
+    m_content->Connect(
+        wxEVT_LEFT_DOWN,
+        wxMouseEventHandler(BitmapViewer::OnMouseDown),
+        NULL,
+        this);
 }
-
 
 void BitmapViewer::SetBestFitZoom()
 {
@@ -71,25 +68,22 @@ void BitmapViewer::SetBestFitZoom()
     SetZoom(std::min(scale_x, scale_y));
 }
 
-
 void BitmapViewer::UpdateBitmap()
 {
     int new_w = int(m_orig_image.GetWidth() * m_zoom_factor);
     int new_h = int(m_orig_image.GetHeight() * m_zoom_factor);
 
-    if ( new_w != m_orig_image.GetWidth() ||
-         new_h != m_orig_image.GetHeight() )
+    if (new_w != m_orig_image.GetWidth() ||
+        new_h != m_orig_image.GetHeight())
     {
         wxImage scaled =
-            m_orig_image.Scale
-                         (
-                             new_w,
-                             new_h,
-                             // we don't need HQ filtering when upscaling
-                             m_zoom_factor < 1.0
-                                ? wxIMAGE_QUALITY_HIGH
-                                : wxIMAGE_QUALITY_NORMAL
-                         );
+            m_orig_image.Scale(
+                new_w,
+                new_h,
+                // we don't need HQ filtering when upscaling
+                m_zoom_factor < 1.0
+                    ? wxIMAGE_QUALITY_HIGH
+                    : wxIMAGE_QUALITY_NORMAL);
         m_content->SetBitmap(wxBitmap(scaled));
     }
     else
@@ -99,17 +93,15 @@ void BitmapViewer::UpdateBitmap()
 
     GetSizer()->FitInside(this);
 
-    if ( m_gutter )
+    if (m_gutter)
         m_gutter->UpdateViewPos(this);
 }
 
-
-void BitmapViewer::Set(const wxImage& image)
+void BitmapViewer::Set(const wxImage &image)
 {
     m_orig_image = image;
     UpdateBitmap();
 }
-
 
 void BitmapViewer::Set(cairo_surface_t *surface)
 {
@@ -126,9 +118,9 @@ void BitmapViewer::Set(cairo_surface_t *surface)
     const unsigned char *p_in = cairo_image_surface_get_data(surface);
     const int stride = cairo_image_surface_get_stride(surface);
 
-    for ( int y = 0; y < h; y++, p_in += stride )
+    for (int y = 0; y < h; y++, p_in += stride)
     {
-        for ( int x = 0; x < w; x++ )
+        for (int x = 0; x < w; x++)
         {
             *(p_out++) = *(p_in + 4 * x + 2);
             *(p_out++) = *(p_in + 4 * x + 1);
@@ -139,16 +131,14 @@ void BitmapViewer::Set(cairo_surface_t *surface)
     Set(img);
 }
 
-
 void BitmapViewer::AttachGutter(Gutter *g)
 {
     m_gutter = g;
-    if ( g )
+    if (g)
         g->UpdateViewPos(this);
 }
 
-
-void BitmapViewer::OnMouseDown(wxMouseEvent& event)
+void BitmapViewer::OnMouseDown(wxMouseEvent &event)
 {
     wxPoint view_origin;
     GetViewStart(&view_origin.x, &view_origin.y);
@@ -161,55 +151,59 @@ void BitmapViewer::OnMouseDown(wxMouseEvent& event)
     CaptureMouse();
 }
 
-
-void BitmapViewer::OnMouseUp(wxMouseEvent&)
+void BitmapViewer::OnMouseUp(wxMouseEvent &)
 {
     m_draggingPage = false;
     ReleaseMouse();
 }
 
-
-void BitmapViewer::OnMouseMove(wxMouseEvent& event)
+void BitmapViewer::OnMouseMove(wxMouseEvent &event)
 {
     event.Skip();
 
-    if ( !m_draggingPage )
+    if (!m_draggingPage)
         return;
+
+    // Get scroll lenth
+    int xppu, yppu;
+    GetScrollPixelsPerUnit(&xppu, &yppu);
 
     wxPoint view_origin;
     GetViewStart(&view_origin.x, &view_origin.y);
+    view_origin.x *= xppu;
+    view_origin.y *= yppu;
 
     // Use absolute position instead
     const wxPoint pos = CalcUnscrolledPosition(event.GetPosition());
-    
-    wxPoint new_pos = view_origin + (m_draggingLastMousePos - pos);
+    wxPoint delta = m_draggingLastMousePos - pos;
 
-    Scroll(new_pos.x, new_pos.y);
-    if ( m_gutter )
+    // Control via step lenth
+    wxPoint new_pos = view_origin + delta;
+    Scroll(new_pos.x / xppu, new_pos.y / yppu);
+
+    if (m_gutter)
         m_gutter->UpdateViewPos(this);
 
     m_draggingLastMousePos = pos;
 }
 
-
-void BitmapViewer::OnMouseCaptureLost(wxMouseCaptureLostEvent& event)
+void BitmapViewer::OnMouseCaptureLost(wxMouseCaptureLostEvent &event)
 {
     m_draggingPage = false;
     event.Skip();
 }
 
-
-void BitmapViewer::OnScrolling(wxScrollWinEvent& event)
+void BitmapViewer::OnScrolling(wxScrollWinEvent &event)
 {
-    if ( m_gutter )
+    if (m_gutter)
         m_gutter->UpdateViewPos(this);
 
     event.Skip();
 }
 
-void BitmapViewer::OnSizeChanged(wxSizeEvent& event)
+void BitmapViewer::OnSizeChanged(wxSizeEvent &event)
 {
-    if ( m_gutter )
+    if (m_gutter)
         m_gutter->UpdateViewPos(this);
 
     event.Skip();

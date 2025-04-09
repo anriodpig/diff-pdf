@@ -74,6 +74,10 @@ void BitmapViewer::SetBestFitZoom()
 
 void BitmapViewer::UpdateBitmap()
 {
+    // 保存当前滚动位置
+    int view_x, view_y;
+    GetViewStart(&view_x, &view_y);
+
     int new_w = int(m_orig_image.GetWidth() * m_zoom_factor);
     int new_h = int(m_orig_image.GetHeight() * m_zoom_factor);
 
@@ -85,7 +89,6 @@ void BitmapViewer::UpdateBitmap()
                          (
                              new_w,
                              new_h,
-                             // we don't need HQ filtering when upscaling
                              m_zoom_factor < 1.0
                                 ? wxIMAGE_QUALITY_HIGH
                                 : wxIMAGE_QUALITY_NORMAL
@@ -99,10 +102,12 @@ void BitmapViewer::UpdateBitmap()
 
     GetSizer()->FitInside(this);
 
+    // 恢复滚动位置
+    Scroll(view_x, view_y);
+
     if ( m_gutter )
         m_gutter->UpdateViewPos(this);
 }
-
 
 void BitmapViewer::Set(const wxImage& image)
 {

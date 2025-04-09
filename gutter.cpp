@@ -111,7 +111,7 @@ void Gutter::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const
 
         wxRect view(m_viewPos);
         view.Offset(rect.GetTopLeft());
-        view.Offset(wxPoint(xoffset, yoffset));
+        view.Offset(CalcUnscrolledPosition(wxPoint(xoffset, yoffset)));
 
         dc.SetBrush(*wxTRANSPARENT_BRUSH);
         dc.SetPen(wxPen(*wxBLUE));

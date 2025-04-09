@@ -38,7 +38,7 @@ BitmapViewer::BitmapViewer(wxWindow *parent)
                        wxDefaultPosition, wxDefaultSize,
                        wxFULL_REPAINT_ON_RESIZE)
 {
-    wxLog *oldLog = wxLog::SetActiveTarget(new wxLogWindow(NULL, "Log Window", true));
+    // wxLog *oldLog = wxLog::SetActiveTarget(new wxLogWindow(NULL, "Log Window", true));
 
     m_gutter = NULL;
     m_zoom_factor = 1.0;

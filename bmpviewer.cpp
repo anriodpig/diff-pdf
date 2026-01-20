@@ -220,7 +220,7 @@ void BitmapViewer::OnMouseCaptureLost(wxMouseCaptureLostEvent& event)
     m_draggingPage = false;
     if ( HasCapture() )
         ReleaseMouse();
-    event.Skip();
+    // 必须消费事件，否则 wxWidgets 会认为未处理而触发断言
 }
 
 

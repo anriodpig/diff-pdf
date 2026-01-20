@@ -23,9 +23,6 @@
 #include <wx/sizer.h>
 
 BEGIN_EVENT_TABLE(BitmapViewer, wxScrolledWindow)
-    EVT_LEFT_DOWN(BitmapViewer::OnMouseDown)
-    EVT_LEFT_UP(BitmapViewer::OnMouseUp)
-    EVT_MOTION(BitmapViewer::OnMouseMove)
     EVT_MOUSE_CAPTURE_LOST(BitmapViewer::OnMouseCaptureLost)
     EVT_SCROLLWIN(BitmapViewer::OnScrolling)
     EVT_SIZE(BitmapViewer::OnSizeChanged)
@@ -49,12 +46,26 @@ BitmapViewer::BitmapViewer(wxWindow *parent)
     sizer->Add(m_content, wxSizerFlags(1).Expand());
     SetSizer(sizer);
 
-    // we need to bind mouse-down event to m_content, as this scrolled window
+    // we need to bind mouse events to m_content, as this scrolled window
     // will never see mouse events otherwise
     m_content->Connect
                (
                    wxEVT_LEFT_DOWN,
                    wxMouseEventHandler(BitmapViewer::OnMouseDown),
+                   NULL,
+                   this
+               );
+    m_content->Connect
+               (
+                   wxEVT_LEFT_UP,
+                   wxMouseEventHandler(BitmapViewer::OnMouseUp),
+                   NULL,
+                   this
+               );
+    m_content->Connect
+               (
+                   wxEVT_MOTION,
+                   wxMouseEventHandler(BitmapViewer::OnMouseMove),
                    NULL,
                    this
                );
@@ -170,16 +181,18 @@ void BitmapViewer::OnMouseUp(wxMouseEvent&)
 
 void BitmapViewer::OnMouseMove(wxMouseEvent& event)
 {
-    event.Skip();
-
     if ( !m_draggingPage )
+    {
+        event.Skip();
         return;
+    }
 
     wxPoint view_origin;
     GetViewStart(&view_origin.x, &view_origin.y);
 
     const wxPoint pos = event.GetPosition();
-    wxPoint new_pos = view_origin + (m_draggingLastMousePos - pos);
+    wxPoint delta = pos - m_draggingLastMousePos;
+    wxPoint new_pos = view_origin - delta;
 
     Scroll(new_pos.x, new_pos.y);
     if ( m_gutter )

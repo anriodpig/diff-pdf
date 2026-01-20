@@ -1,6 +1,6 @@
 name: Build
 
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build-linux:
@@ -12,7 +12,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update && \
-        sudo apt-get install libpoppler-glib-dev poppler-utils libwxgtk3.0-gtk3-dev
+        sudo apt-get install libpoppler-glib-dev poppler-utils libwxgtk3.2-dev
 
     - name: Bootstrap
       run: ./bootstrap
@@ -49,13 +49,18 @@ jobs:
       with:
         msystem: UCRT64
         update: true
-        install: mingw-w64-ucrt-x86_64-gcc automake autoconf pkg-config make zip mingw-w64-ucrt-x86_64-poppler mingw-w64-ucrt-x86_64-wxWidgets
-
+        install: >
+          mingw-w64-ucrt-x86_64-gcc
+          automake autoconf pkg-config make zip
+          mingw-w64-ucrt-x86_64-poppler
+          mingw-w64-ucrt-x86_64-wxwidgets3.2
     - name: Bootstrap
       run: ./bootstrap
 
     - name: Configure
-      run: ./configure
+      run: |
+        export PATH="/ucrt64/bin:$PATH"
+        ./configure
 
     - name: Build
       run: make

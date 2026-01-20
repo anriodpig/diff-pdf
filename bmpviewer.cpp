@@ -20,6 +20,7 @@
 #include "bmpviewer.h"
 #include "gutter.h"
 
+#include <algorithm>
 #include <wx/sizer.h>
 
 BEGIN_EVENT_TABLE(BitmapViewer, wxScrolledWindow)
@@ -161,21 +162,27 @@ void BitmapViewer::AttachGutter(Gutter *g)
 
 void BitmapViewer::OnMouseDown(wxMouseEvent& event)
 {
-    wxPoint view_origin;
-    GetViewStart(&view_origin.x, &view_origin.y);
+    // 仅在左键按下时开始拖动，避免误捕获
+    if ( !event.LeftIsDown() )
+    {
+        event.Skip();
+        return;
+    }
 
     const wxPoint pos = event.GetPosition();
 
     m_draggingPage = true;
     m_draggingLastMousePos = pos;
-    CaptureMouse();
+    if ( !HasCapture() )
+        CaptureMouse();
 }
 
 
 void BitmapViewer::OnMouseUp(wxMouseEvent&)
 {
     m_draggingPage = false;
-    ReleaseMouse();
+    if ( HasCapture() )
+        ReleaseMouse();
 }
 
 
@@ -194,6 +201,12 @@ void BitmapViewer::OnMouseMove(wxMouseEvent& event)
     wxPoint delta = pos - m_draggingLastMousePos;
     wxPoint new_pos = view_origin - delta;
 
+    // 限制滚动范围，避免越界引发自动滚动或闪动
+    int total_x, total_y;
+    GetVirtualSize(&total_x, &total_y);
+    new_pos.x = std::max(0, std::min(new_pos.x, total_x));
+    new_pos.y = std::max(0, std::min(new_pos.y, total_y));
+
     Scroll(new_pos.x, new_pos.y);
     if ( m_gutter )
         m_gutter->UpdateViewPos(this);
@@ -205,6 +218,8 @@ void BitmapViewer::OnMouseMove(wxMouseEvent& event)
 void BitmapViewer::OnMouseCaptureLost(wxMouseCaptureLostEvent& event)
 {
     m_draggingPage = false;
+    if ( HasCapture() )
+        ReleaseMouse();
     event.Skip();
 }
 
